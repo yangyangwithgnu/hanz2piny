@@ -319,7 +319,7 @@ bool
 Hanz2Piny::isStartWithBom (const string& s) const;
 ```
 
-另外，最早我把完整拼音列表放入 vector<vector<string>> 中，类似  
+另外，最早我把完整拼音列表放入 vector\<vector\<string>> 中，类似  
 ```
 const vector<vector<string>> Hanz2Piny::pinyin_list_list_with_tone_ {
 	{"ding1"},
