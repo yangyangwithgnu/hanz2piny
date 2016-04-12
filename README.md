@@ -149,13 +149,13 @@ ERROR! fail to open UTF-8 encoding file /data/workplace/hanz2piny/test_txt/linux
 ```
 其他编码的文件要转成小尾存储的 UTF-8 编码的文件很容易。unix-like 用户，可以先执行  
 ```
-file --mime-encoding utf-16le_file.txt
+file --mime-encoding utf-16be_file.txt
 ```
 查看文件的编码格式以及小尾还是大尾存储；然后将原编码格式（下例中的 utf-16be）作为 -f 选项的参数，执行  
 ```
-iconv -f utf-16le -t utf-8 utf-16le_file.txt > UTF-8_file.txt
+iconv -f utf-16be -t utf-8 utf-16be_file.txt > UTF-8_file.txt
 ```
-这样，轻松将大尾存储的 UTF-16 编码的文件 utf-16le\_file.txt 转换成小尾存储的 UTF-8 编码格式的文件 UTF-8_file.txt。m$-windows 用户，用记事本打开原文件，菜单项依次选择打开 – 另存为，在"编码"下拉列表中选择 UTF-8，保存即可。
+这样，轻松将大尾存储的 UTF-16 编码的文件 utf-16be\_file.txt 转换成小尾存储的 UTF-8 编码格式的文件 UTF-8_file.txt。m$-windows 用户，用记事本打开原文件，菜单项依次选择打开 – 另存为，在"编码"下拉列表中选择 UTF-8，保存即可。
 
 满足了基本条件，汉字转拼音，默认情况下只需指定 --path 即可：  
 ```
@@ -221,10 +221,10 @@ hanz2piny --path '/data/workplace/hanz2piny/test_txt/linux/pentest.txt' --tone -
 
 ##5 FQA
 
-Q0：我是 m$-windows 用户，双击 hanz2piny.exe 后，命令行窗口一闪而过，无法指定命令行选项？
+Q0：我是 m$-windows 用户，双击 hanz2piny.exe 后，命令行窗口一闪而过，无法指定命令行选项？  
 A0：既然是命令行程序，通常应在命令行中启动，而不是双击启动。你可以先在文件管理器中进入 hanz2piny.exe 所在目录，接着键入 alt-d 将光标定位到文件管理器的地址栏中，然后键入 CMD 回车在该目录下打开命令行窗口，最后在命令行窗口中键入 hanz2piny.exe 即可启用该程序。
 
-Q1：hanz2piny 能处理所有简体、繁体中文汉字么？
+Q1：hanz2piny 能处理所有简体、繁体中文汉字么？  
 A0：不能。hanz2piny 只处理 UCS2 序号（数值上等同于 unicode）在 [4E00, 9FA5] 区间的 20902 个汉字，常见简体、繁体汉字都在里面，够用了。
 
 
@@ -272,11 +272,13 @@ UTF 目前有三个版本：UTF-8、UTF-16、UTF-32。UTF-8 编码是变长的�
 
 好了，输入是 UTF-8，程序采用的是 UCS-2 序号表顺序的拼音，所以，需要将 UTF-8 转为 UCS-2。前面提过，unicode、UCS-2、UTF-16 三者混用的情况很常见，所以，在很多解决方案中写到：（最常见的是）UTF-8 转 unicode，或者，（其次常见）UTF-8 转 UTF-16，或者，（最少见但最严谨）UTF-8 转 UCS-2。
 
-对于 UTF-8 转 unicode/UTF-16/UCS-2 我考虑了多种方案：STL 的 codecvt、boost 的 conv、iconv、miniutf（https://github.com/dropbox/miniutf）、utfcpp（https://github.com/nemtrif/utfcpp）。从使用便利、程序体积等方面考量，最终选用 utfcpp。
+对于 UTF-8 转 unicode/UTF-16/UCS-2 我考虑了多种方案：STL 的 codecvt、boost 的 conv、iconv、miniutf（https://github.com/dropbox/miniutf ）、utfcpp（https://github.com/nemtrif/utfcpp ）。从使用便利、程序体积等方面考量，最终选用 utfcpp。
 
 utfcpp 将 UTF-8 转为 UCS-2 的接口为
+```
 template <typename u16bit_iterator, typename octet_iterator>
 u16bit_iterator utf8to16 (octet_iterator start, octet_iterator end, u16bit_iterator result);
+```
 看，又一个把 unicode 与 UCS-2 搞混淆的例子，严谨的命名应该是 utf8toucs2()。
 
 ###6.3 libhanz2piny 接口
