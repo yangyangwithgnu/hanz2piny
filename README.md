@@ -1,7 +1,7 @@
 <h1 align="center">能处理姓氏异读的汉字转拼音工具：hanz2piny</h1>
 yangyangwithgnu@yeah.net  
 http://yangyangwithgnu.github.io/  
-2016-04-12 13:38:02
+2016-04-12 12:58:02
 
 
 ##谢谢
@@ -329,7 +329,7 @@ const vector<vector<string>> Hanz2Piny::pinyin_list_list_with_tone_ {
 	// ....
 };
 ```
-当拼音规模在几百个时，编译速度也就几十秒，还能接受，后来添加完全量 2W 个拼音时，等了几十分钟还没编译完成，估计是编译器实施优化，将 2W 个字面常量字符串提前放入 vector<vector<string>> 的私有数据成员中。有两个办法可以缩短编译时间，一是采用 debug 模式编译，二是弃用 vector<>。对于前者，实际上就是禁止一切优化，编译时间缩短至一分钟左右，但可执行文件体积膨胀至 16M，借助 UPX 倒是可以压缩至 2M，但始终不够优雅。对于后者，将 vector<> 改为 const char* list[]，虽然代码逻辑略微增加，但效果显著，几秒便可编译完成。如下：  
+当拼音规模在几百个时，编译速度也就几十秒，还能接受，后来添加完全量 2W 个拼音时，等了几十分钟还没编译完成，估计是编译器实施优化，将 2W 个字面常量字符串提前放入 vector\<vector\<string>> 的私有数据成员中。有两个办法可以缩短编译时间，一是采用 debug 模式编译，二是弃用 vector<>。对于前者，实际上就是禁止一切优化，编译时间缩短至一分钟左右，但可执行文件体积膨胀至 16M，借助 UPX 倒是可以压缩至 2M，但始终不够优雅。对于后者，将 vector<> 改为 const char* list[]，虽然代码逻辑略微麻烦，但效果显著，几秒便可编译完成。如下：  
 ```
 const char* Hanz2Piny::pinyin_list_with_tone_[] {
 	"ding1", 
