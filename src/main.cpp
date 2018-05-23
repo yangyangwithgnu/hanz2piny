@@ -62,7 +62,7 @@ showHelpInfo (void)
                     "set off this option;" << endl;
     cout << endl << "\t--replace-unknown-with. some char that hanz2piny could not handle, you can replace "
                     "them with string by set up this argument; " << endl;
-    cout << endl << "\t--path. set up the file path that chinese hanzi file, make sure the file is exist "
+    cout << endl << "\t--path. set up the file path that chinese hanzi file, if not set, read from stdin"
                     "and the encoding is UTF-8. " << endl;
 
     cout << endl;
@@ -128,12 +128,11 @@ main (int argc, char* argv[])
     const string replace_unknown_with = (cmdline_arguments_list.empty() ? "" : cmdline_arguments_list[0]);
 
     // --path
+    string file_path;
     cmdline_arguments_list = cmdline_options.getArgumentsList("--path");
-    if (cmdline_arguments_list.empty()) {
-        cerr << "ERROR! there is no --path, more info see --help. " << endl;
-        exit(EXIT_FAILURE);
+    if (!cmdline_arguments_list.empty()) {
+        file_path.assign(cmdline_arguments_list[0]);
     }
-    const string file_path = cmdline_arguments_list[0];
 
     // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -142,7 +141,7 @@ main (int argc, char* argv[])
 
     // --checkutf8
     const bool ignore_utf8_check = cmdline_options.hasOption("--ignore-utf8-check");
-    if (!ignore_utf8_check) {
+    if (!file_path.empty() && !ignore_utf8_check) {
         if (!hanz2piny.isUtf8File(file_path)) {
             cerr << "ERROR! fail to open UTF-8 encoding file " << file_path
                  << ". make sure the file is exist and the encoding is UTF-8. "
@@ -151,9 +150,14 @@ main (int argc, char* argv[])
         }
     }
 
-    ifstream utf8_ifs(file_path);
     string line;
-    while (getline(utf8_ifs, line)) {
+    istream *utf8_ifs = &cin;
+    ifstream infile;
+    if (!file_path.empty()) {
+        infile.open(file_path.c_str(), fstream::in);
+        utf8_ifs = &infile;
+    }
+    while (getline(*utf8_ifs, line)) {
         // 去掉 BOM 头
         if (hanz2piny.isStartWithBom(line)) {
             line = string(line.cbegin() + 3, line.cend());
