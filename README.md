@@ -118,6 +118,10 @@ hanz2piny 的完整命令行选项如下：
 指定输出结果中，替换掉未成功转换拼音的原字符；  
 可选；  
 无参数。  
+--ignore-utf8-check
+跳过文件的utf8合法行检查
+可选； 默认开启检查 
+无参数。  
 --replace-unknown-with  
 输出结果中，用指定的字符串替换掉未成功转换拼音的原字符。若未指定 --replace-unknown，则即便指定 --replace-unknown-with 也无效果；  
 可选；  
