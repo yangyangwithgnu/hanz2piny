@@ -58,9 +58,11 @@ showHelpInfo (void)
                     "focus pinyin in non-name, set up noname. The default argument is noname;" << endl;
     cout << endl << "\t--replace-unknown. some char that hanz2piny could not handle, you can replace them by "
                     "set on this option;" << endl;
+    cout << endl << "\t--ignore-utf8-check. don't check if file utf8 valid, default to check"
+                    "set off this option;" << endl;
     cout << endl << "\t--replace-unknown-with. some char that hanz2piny could not handle, you can replace "
                     "them with string by set up this argument; " << endl;
-    cout << endl << "\t--path. set up the file path that chinese hanzi file, make sure the file is exist "
+    cout << endl << "\t--path. set up the file path that chinese hanzi file, if not set, read from stdin"
                     "and the encoding is UTF-8. " << endl;
 
     cout << endl;
@@ -98,10 +100,10 @@ main (int argc, char* argv[])
     }
 
     // --tone
-    const bool tone = cmdline_options.hasOption("--tone"); 
+    const bool tone = cmdline_options.hasOption("--tone");
 
     // --camel
-    const bool camel = cmdline_options.hasOption("--camel"); 
+    const bool camel = cmdline_options.hasOption("--camel");
 
     // --polyphone
     Hanz2Piny::Polyphone polyphone;
@@ -119,39 +121,48 @@ main (int argc, char* argv[])
     }
 
     // --replace-unknown
-    const bool replace_unknown = cmdline_options.hasOption("--replace-unknown"); 
+    const bool replace_unknown = cmdline_options.hasOption("--replace-unknown");
 
     // --replace-unknown-with
     cmdline_arguments_list = cmdline_options.getArgumentsList("--replace-unknown-with");
     const string replace_unknown_with = (cmdline_arguments_list.empty() ? "" : cmdline_arguments_list[0]);
 
     // --path
+    string file_path;
     cmdline_arguments_list = cmdline_options.getArgumentsList("--path");
-    if (cmdline_arguments_list.empty()) {
-        cerr << "ERROR! there is no --path, more info see --help. " << endl;
-        exit(EXIT_FAILURE);
+    if (!cmdline_arguments_list.empty()) {
+        file_path.assign(cmdline_arguments_list[0]);
     }
-    const string file_path = cmdline_arguments_list[0];
 
     // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
     const Hanz2Piny hanz2piny;
-    if (!hanz2piny.isUtf8File(file_path)) {
-        cerr << "ERROR! fail to open UTF-8 encoding file " << file_path
-             << ". make sure the file is exist and the encoding is UTF-8. "
-             << endl;
-        exit(EXIT_FAILURE);
+
+    // --checkutf8
+    const bool ignore_utf8_check = cmdline_options.hasOption("--ignore-utf8-check");
+    if (!file_path.empty() && !ignore_utf8_check) {
+        if (!hanz2piny.isUtf8File(file_path)) {
+            cerr << "ERROR! fail to open UTF-8 encoding file " << file_path
+                 << ". make sure the file is exist and the encoding is UTF-8. "
+                 << endl;
+            exit(EXIT_FAILURE);
+        }
     }
-    
-    ifstream utf8_ifs(file_path);
+
     string line;
-    while (getline(utf8_ifs, line)) {
+    istream *utf8_ifs = &cin;
+    ifstream infile;
+    if (!file_path.empty()) {
+        infile.open(file_path.c_str(), fstream::in);
+        utf8_ifs = &infile;
+    }
+    while (getline(*utf8_ifs, line)) {
         // 去掉 BOM 头
         if (hanz2piny.isStartWithBom(line)) {
             line = string(line.cbegin() + 3, line.cend());
         }
-        
+
         vector<pair<bool, vector<string>>> pinyin_list_list = hanz2piny.toPinyinFromUtf8( line,
                                                                                           tone,
                                                                                           replace_unknown,
@@ -159,7 +170,7 @@ main (int argc, char* argv[])
         for (const auto& e : pinyin_list_list) {
             const bool ok = e.first;
             auto pinyin_list = e.second;
-            
+
             if (pinyin_list.size() == 1) {          // 单音字
                 auto pinyin = pinyin_list[0];
                 if (ok && camel) {
@@ -179,7 +190,7 @@ main (int argc, char* argv[])
                         cout << "\b\b>";
                     }
                     break;
-                    
+
                     case Hanz2Piny::name: {
                         auto pinyin = pinyin_list[0];
                         if (ok && camel) {
@@ -188,7 +199,7 @@ main (int argc, char* argv[])
                         cout << pinyin;
                     }
                     break;
-                    
+
                     case Hanz2Piny::noname: {
                         auto pinyin = pinyin_list[1];
                         if (ok && camel) {
